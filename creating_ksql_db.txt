@@ -1,0 +1,46 @@
+After data is placed into the Topic create the KSQLDB Stream as follows
+
+CREATE STREAM youtube_videos(
+  video_id VARCHAR KEY,
+  title VARCHAR,
+  likes INTEGER,
+  comments INTEGER,
+  views INTEGER,
+  favorites INTEGER,
+  thumbnail VARCHAR
+  ) WITH (
+    KAFKA_TOPIC = 'youtube_videos',
+    PARTITIONS = 1,
+    VALUE_FORMAt = 'json'
+    );
+
+
+Creates a ksqlDB stream called `youtube_videos`.
+
+
+Here's what that actually means broken down:
+
+What a Stream is
+A stream in ksqlDB is an unbounded, immutable sequence of events. It doesn't store state — it just represents data flowing through a Kafka topic. Every record is a new event, not an update to an existing one.
+
+What this specific statement does
+It's not creating new data — it's registering a schema on top of an existing Kafka topic called `youtube_videos`. You're essentially telling ksqlDB:
+
+"There's a Kafka topic called `youtube_videos`, the messages are JSON, and each message has these fields with these types."
+
+After this runs, ksqlDB knows how to interpret the raw bytes coming off that topic as structured rows with named columns.
+
+`video_id VARCHAR KEY`
+This designates `video_id` as the Kafka message key, not just a regular column. That matters for joins, repartitioning, and how data is distributed across partitions.
+
+`PARTITIONS = 1`
+Tells ksqlDB to create the topic with 1 partition if it doesn't already exist. If the topic exists, this is effectively ignored.
+
+The end result
+Once this stream exists, you can query it like a table:
+SELECT * FROM youtube_videos EMIT CHANGES;
+
+
+Or build aggregations, filters, and derived streams on top of it — all in real time as new messages arrive on the Kafka topic.
+
+In short: it's a real-time pipeline entry point for YouTube video data flowing through Kafka.
